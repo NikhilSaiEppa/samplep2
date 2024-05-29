@@ -41,6 +41,14 @@ stages:
         tags: |
           $(tag)
 
+    # Assuming there are some steps that generate the manifests directory here
+    # Ensure manifests directory is generated
+    - script: |
+        mkdir -p $(Pipeline.Workspace)/manifests
+        echo "apiVersion: v1" > $(Pipeline.Workspace)/manifests/deployment.yml
+        echo "apiVersion: v1" > $(Pipeline.Workspace)/manifests/service.yml
+      displayName: 'Generate manifests (temporary step)'
+
     - task: CopyFiles@2
       displayName: 'Copy manifests to revhire-job-service directory'
       inputs:
@@ -48,7 +56,7 @@ stages:
         Contents: '**/*'
         TargetFolder: '$(Pipeline.Workspace)/revhire-job-service/manifests'
 
-    - upload: $(Pipeline.Workspace)/revhire-job-service/manifests
+    - publish: $(Pipeline.Workspace)/revhire-job-service/manifests
       artifact: manifests
 
 - stage: Deploy
