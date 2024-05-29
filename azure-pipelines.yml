@@ -3,26 +3,24 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/docker
 
 trigger:
- paths:
-   include:
-     - revhire-job-service/*
+  paths:
+    include:
+      - revhire-job-service/*
 
 resources:
 - repo: self
 
 variables:
-
   # Container registry service connection established during pipeline creation
   dockerRegistryServiceConnection: '86e6a97b-c127-4b93-89ae-f56336c076fb'
   imageRepository: 'jobservice'
   containerRegistry: 'containerp2.azurecr.io'
-  dockerfilePath: '**/Dockerfile'
+  dockerfilePath: 'revhire-job-service/Dockerfile'
   tag: '$(Build.BuildId)'
   imagePullSecret: 'containerp27df4-auth'
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
-
 
 stages:
 - stage: Build
@@ -43,7 +41,14 @@ stages:
         tags: |
           $(tag)
 
-    - upload: manifests
+    - task: CopyFiles@2
+      displayName: 'Copy manifests to revhire-job-service directory'
+      inputs:
+        SourceFolder: '$(Pipeline.Workspace)/manifests'
+        Contents: '**/*'
+        TargetFolder: '$(Pipeline.Workspace)/revhire-job-service/manifests'
+
+    - upload: $(Pipeline.Workspace)/revhire-job-service/manifests
       artifact: manifests
 
 - stage: Deploy
@@ -78,4 +83,3 @@ stages:
                 $(imagePullSecret)
               containers: |
                 $(containerRegistry)/$(imageRepository):$(tag)
-
